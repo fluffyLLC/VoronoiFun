@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Voronoi : MonoBehaviour {
     [Range(20, 100)] public int numberOfPoints = 20;
-    List<Triangle> triangles = new List<Triangle>();
+    List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
     List<Cell> cells = new List<Cell>();
     Vector3[] pts;
 
@@ -40,14 +40,14 @@ public class Voronoi : MonoBehaviour {
 
         cells = new List<Cell>();
 
-        for (int i = pts.Length-1; i >= 0; i--) {
-            List<Triangle> cellTris = FindTris(pts[i]);
-            cells.Add(new Cell(pts[i], cellTris));
+        for (int i = pts.Length - 1; i >= 0; i--) {
+            List<DelaunyTriangle> cellTris = FindTris(pts[i]);
+            cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris,pts[i])));
         }
-        
+
     }
 
-    struct Triangle {
+    struct DelaunyTriangle {
         //public int i1;
         //public int i2;
         //public int i3;
@@ -57,7 +57,7 @@ public class Voronoi : MonoBehaviour {
         public Vector3 cicumCenter { get; }
         public float radiusSquared { get; }
 
-        public Triangle(Vector3 a, Vector3 b, Vector3 c) {
+        public DelaunyTriangle(Vector3 a, Vector3 b, Vector3 c) {
             this.a = a;
             this.b = b;
             this.c = c;
@@ -69,11 +69,11 @@ public class Voronoi : MonoBehaviour {
             return (cicumCenter - other).sqrMagnitude < radiusSquared;
         }
 
-        public static bool operator ==(Triangle t1, Triangle t2) {
+        public static bool operator ==(DelaunyTriangle t1, DelaunyTriangle t2) {
             return t1.Equals(t2);
         }
 
-        public static bool operator !=(Triangle t1, Triangle t2) {
+        public static bool operator !=(DelaunyTriangle t1, DelaunyTriangle t2) {
             return !t1.Equals(t2);
         }
 
@@ -81,12 +81,15 @@ public class Voronoi : MonoBehaviour {
 
     struct Cell {
 
-        public List<Triangle> cellTris { get; set; }
+        public List<DelaunyTriangle> cellTris { get; set; }
+        public List<Vector3> orderedVerts { get; set; }
         public Vector3 site { get; }
 
-        public Cell(Vector3 site, List<Triangle> cellTris) : this() {
+
+        public Cell(Vector3 site, List<DelaunyTriangle> cellTris, List<Vector3> orderedVerts) : this() {
             this.site = site;
             this.cellTris = cellTris;
+            this.orderedVerts = orderedVerts;
         }
 
     }
@@ -99,7 +102,7 @@ public class Voronoi : MonoBehaviour {
     /// </summary>
     /// <param name="points"></param>
     void Triangulate(Vector3[] points) {
-        triangles = new List<Triangle>();
+        triangles = new List<DelaunyTriangle>();
         int calculations = 0;
         foreach (Vector3 p1 in points) {
             foreach (Vector3 p2 in points) {
@@ -108,7 +111,7 @@ public class Voronoi : MonoBehaviour {
                     if (p1 == p3) continue;
                     if (p2 == p3) continue;
 
-                    Triangle tri = new Triangle(p1, p2, p3);
+                    DelaunyTriangle tri = new DelaunyTriangle(p1, p2, p3);
                     bool success = true;
                     foreach (Vector3 p4 in points) {
                         if (p1 == p4) continue;
@@ -126,17 +129,7 @@ public class Voronoi : MonoBehaviour {
         }
 
         //print($"triangulization complete after {calculations} calculations");
-        /*
-        int[] result = new int[triangles.Count * 3];
-        int i = 0;
-        foreach(Triangle tri in triangles)
-        {
-            result[i++] = tri.i1;
-            result[i++] = tri.i2;
-            result[i++] = tri.i3;
-        }
-        return result;
-        */
+        
     }
 
     /// <summary>
@@ -146,7 +139,7 @@ public class Voronoi : MonoBehaviour {
 
         Vector3 size = Vector3.one * .1f;
         if (drawDelauny) {
-            foreach (Triangle tri in triangles) {
+            foreach (DelaunyTriangle tri in triangles) {
                 if (TriContains(tri, pts[0])) {
                     Gizmos.color = Color.green;
                 } else {
@@ -158,10 +151,24 @@ public class Voronoi : MonoBehaviour {
             }
         }
 
-        
+
         Gizmos.color = Color.red;
         //print(testCell.cellTris.Count);
+
         foreach (Cell c in cells) {
+            for (int i = c.orderedVerts.Count - 1; i >= 0; i--) {
+                if (i > 0) {
+                    Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
+                } else {
+                   // Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
+                }
+ 
+            }
+
+        }
+
+        /*
+            foreach (Cell c in cells) {
             for (int i = c.cellTris.Count - 1; i >= 0; i--) {
                 //print("runing");
                 for (int j = c.cellTris.Count - 1; j >= 0; j--) {
@@ -172,7 +179,7 @@ public class Voronoi : MonoBehaviour {
                     }
                 }
             }
-        }
+        }*/
     }
 
     /// <summary>
@@ -191,10 +198,32 @@ public class Voronoi : MonoBehaviour {
         return result;
     }
 
+    List<Vector3> OrderedTris(List<DelaunyTriangle> tris, Vector3 site) {
+        List<Vector3> orderedVerts = new List<Vector3>();
+        List<DelaunyTriangle> orderedTris = new List<DelaunyTriangle>();
+        orderedTris.Add(tris[0]);
+
+        for (int i = 0; i <= tris.Count - 1; i++) {
+
+            if (orderedTris.Contains(tris[i])) continue;
+
+            if (TriAjacent(orderedTris[0], tris[i], site)) {
+                orderedTris.Insert(0, tris[i]);
+                i = 0;
+            }
+        }
+
+        for (int i = 0; i <= orderedTris.Count - 1; i++) {
+            orderedVerts.Add(orderedTris[i].cicumCenter);
+        }
+
+        return orderedVerts;
+    }
 
 
-    List<Triangle> FindTris(Vector3 site) {
-        List<Triangle> tris = new List<Triangle>();
+
+    List<DelaunyTriangle> FindTris(Vector3 site) {
+        List<DelaunyTriangle> tris = new List<DelaunyTriangle>();
         for (int i = triangles.Count - 1; i >= 0; i--) {
             if (TriContains(triangles[i], site)) {
                 tris.Add(triangles[i]);
@@ -214,7 +243,7 @@ public class Voronoi : MonoBehaviour {
         return pt;
     }
 
-    bool TriAjacent(Triangle tri1, Triangle tri2, Vector3 site) {
+    bool TriAjacent(DelaunyTriangle tri1, DelaunyTriangle tri2, Vector3 site) {
         if (tri1.a == site) {
             if (tri1.b == tri2.a) return true;
             if (tri1.b == tri2.b) return true;
@@ -241,7 +270,7 @@ public class Voronoi : MonoBehaviour {
     }
 
 
-    bool TriContains(Triangle tri, Vector3 pt) {
+    bool TriContains(DelaunyTriangle tri, Vector3 pt) {
         if (tri.a == pt) return true;
         if (tri.b == pt) return true;
         if (tri.c == pt) return true;
