@@ -5,9 +5,9 @@ using UnityEngine;
 public class Voronoi : MonoBehaviour {
     [Range(20, 100)] public int numberOfPoints = 20;
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
-    List<Cell> cells = new List<Cell>();
+    List<Cell> cells;
+    List<Vert[]> verts = new List<Vert[]>();
     Vector3[] pts;
-
 
 
     int radius = 10;
@@ -42,8 +42,12 @@ public class Voronoi : MonoBehaviour {
 
         for (int i = pts.Length - 1; i >= 0; i--) {
             List<DelaunyTriangle> cellTris = FindTris(pts[i]);
-            cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris,pts[i])));
+            cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris, pts[i])));
         }
+
+        List<Vert[]> verts = new List<Vert[]>();
+
+        GenerateVerts();
 
     }
 
@@ -74,6 +78,59 @@ public class Voronoi : MonoBehaviour {
         }
 
         public static bool operator !=(DelaunyTriangle t1, DelaunyTriangle t2) {
+            return !t1.Equals(t2);
+        }
+
+    }
+
+    struct MeshTri {
+        public Vert[] vertisies { get; } 
+        public Vector3 normal { get; }
+        public Vector2[] UVs { get; }
+        public Mesh tri { get; }
+
+        public MeshTri(Vert[] vertisies ) : this(){
+
+
+        }
+
+        
+
+    }
+
+    struct Vert {
+        public Vector3 cellVert { get;  }
+        public Vector3 site { get; }
+        public Vector3 position { get; set; }
+        private float offset { get { return 0.025f; } }
+
+        public Vert(Vector3 cellVert, Vector3 site) : this() {
+           // print("recieved: " + cellVert);
+            this.cellVert = cellVert;
+           // print("set: " + this.cellVert);
+            this.site = site;
+            SetPosition();
+        }
+
+        void SetPosition() {
+            Vector3 vertToSite = cellVert - site;
+            
+            float p =  offset / vertToSite.magnitude;
+            
+            position = Vector3.Lerp(cellVert, site, p);
+            
+            //print("p: " + p);
+            //print("vertToSite: " + vertToSite + ", mag: " + vertToSite.magnitude);
+            //print("position: " + position);
+            //Vector3.MoveTowards(vertToSite,site,
+            //position = vertToSite;
+        }
+
+        public static bool operator ==(Vert t1, Vert t2) {
+            return t1.Equals(t2);
+        }
+
+        public static bool operator !=(Vert t1, Vert t2) {
             return !t1.Equals(t2);
         }
 
@@ -129,7 +186,6 @@ public class Voronoi : MonoBehaviour {
         }
 
         //print($"triangulization complete after {calculations} calculations");
-        
     }
 
     /// <summary>
@@ -160,11 +216,35 @@ public class Voronoi : MonoBehaviour {
                 if (i > 0) {
                     Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
                 } else {
-                   // Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
+                    // Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
                 }
- 
+
             }
 
+        }
+
+        
+        for (int i = verts.Count-1; i >= 0; i--) {
+            //print(verts[0][0].position);
+            
+            for (int a = verts[i].Length-1; a >= 0; a--) {
+                //print(a + ": " + verts[i][a].position);
+                /*
+                Gizmos.color = Color.blue;
+                Gizmos.DrawLine(verts[i][a].cellVert, verts[i][a].position);
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawLine(verts[i][a].position, verts[i][a].site);
+                */
+
+
+                Gizmos.color = Color.green;
+                if (a > 0 ) {
+                    Gizmos.DrawLine(verts[i][a].position, verts[i][a - 1].position);
+                } else if ( a == 0) {
+                    Gizmos.DrawLine(verts[i][a].position, verts[i][2].position);
+                }
+                
+            }
         }
 
         /*
@@ -266,6 +346,61 @@ public class Voronoi : MonoBehaviour {
             if (tri1.b == tri2.b) return true;
             if (tri1.b == tri2.c) return true;
         }
+        return false;
+    }
+
+    void GenerateVerts() {
+  
+        List<Vert> unsortedVerts = new List<Vert>();
+        for(int a = cells.Count -1; a >=0;a-- ) {
+            for (int i = cells[a].orderedVerts.Count - 1; i >= 0; i--) {
+                //print("before: " + cells[a].site);
+                Vert vert = new Vert(cells[a].orderedVerts[i], cells[a].site);
+                //print("after: " + vert.site);
+                unsortedVerts.Add(new Vert(cells[a].orderedVerts[i], cells[a].site));
+                
+            }
+        }
+
+        for (int i = unsortedVerts.Count - 1; i >= 0; i-- ) {
+            List<Vert> tempVerts = new List<Vert>();
+
+           // if (VertsContains(unsortedVerts[i])) continue;
+            
+
+            for (int a = unsortedVerts.Count - 1; a >= 0; a--) {
+                
+                if (unsortedVerts[i].cellVert == unsortedVerts[a].cellVert ) {
+                    //print(unsortedVerts[i].site + ", " + unsortedVerts[a].site);
+                    if (unsortedVerts[i].site != unsortedVerts[a].site) {
+                        
+                        if (tempVerts.Count == 0) {
+                            //print("r");
+                            tempVerts.Add(unsortedVerts[i]);
+                            tempVerts.Add(unsortedVerts[a]);
+                        } else { // if (verts[2] == null) {
+                            tempVerts.Add(unsortedVerts[a]);
+                        }
+                    }
+                }
+            }
+            verts.Add(tempVerts.ToArray());
+        }
+    }
+
+    bool VertsContains(Vert vert) {
+        if (verts.Count == 0) {
+            return false;
+        }
+
+        for (int i = verts.Count - 1; i >= 0; i--) {
+            for (int a = 2; a >= 0; a--) {
+                if (verts[i][a] == vert) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

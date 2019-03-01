@@ -292,7 +292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a3b4ae44d218ac429cc888ffa75d920, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfPoints: 44
+  numberOfPoints: 20
   useCellRadius: 1
   drawDelauny: 0
 --- !u!4 &1612010855
