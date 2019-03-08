@@ -6,8 +6,9 @@ public class Voronoi : MonoBehaviour {
     [Range(20, 100)] public int numberOfPoints = 20;
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
     List<Cell> cells;
-    List<Vert[]> verts = new List<Vert[]>();
+    List<MeshTri> cornerTris = new List<MeshTri>();
     Vector3[] pts;
+    //Vector3 center = 
 
 
     int radius = 10;
@@ -45,7 +46,7 @@ public class Voronoi : MonoBehaviour {
             cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris, pts[i])));
         }
 
-        List<Vert[]> verts = new List<Vert[]>();
+        cornerTris = new List<MeshTri>();
 
         GenerateVerts();
 
@@ -85,17 +86,29 @@ public class Voronoi : MonoBehaviour {
 
     struct MeshTri {
         public Vert[] vertisies { get; } 
-        public Vector3 normal { get; }
-        public Vector2[] UVs { get; }
-        public Mesh tri { get; }
+        //public Vector3 normal { get; }
+        //public Vector2[] UVs { get; }
+       // public Mesh tri { get; }
 
-        public MeshTri(Vert[] vertisies ) : this(){
-
-
+        public MeshTri(Vert[] vertisies ){
+            this.vertisies = vertisies;
         }
 
-        
+        private void CalcNormal() {
+            Vector3 center = Vector3.zero;
 
+            for (int i = vertisies.Length - 1; i >= 0; i--) {
+                center += vertisies[i].position;
+            }
+
+            center /= vertisies.Length;
+
+            //Vector3 n = traansform.position - center;
+            //n.Normalize();
+            //normal = n;
+
+        }
+        
     }
 
     struct Vert {
@@ -105,9 +118,9 @@ public class Voronoi : MonoBehaviour {
         private float offset { get { return 0.025f; } }
 
         public Vert(Vector3 cellVert, Vector3 site) : this() {
-           // print("recieved: " + cellVert);
+            // print("recieved: " + cellVert);
             this.cellVert = cellVert;
-           // print("set: " + this.cellVert);
+            // print("set: " + this.cellVert);
             this.site = site;
             SetPosition();
         }
@@ -224,10 +237,10 @@ public class Voronoi : MonoBehaviour {
         }
 
         
-        for (int i = verts.Count-1; i >= 0; i--) {
+        for (int i = cornerTris.Count-1; i >= 0; i--) {
             //print(verts[0][0].position);
             
-            for (int a = verts[i].Length-1; a >= 0; a--) {
+            for (int a = cornerTris[i].vertisies.Length-1; a >= 0; a--) {
                 //print(a + ": " + verts[i][a].position);
                 /*
                 Gizmos.color = Color.blue;
@@ -239,9 +252,9 @@ public class Voronoi : MonoBehaviour {
 
                 Gizmos.color = Color.green;
                 if (a > 0 ) {
-                    Gizmos.DrawLine(verts[i][a].position, verts[i][a - 1].position);
+                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[a - 1].position);
                 } else if ( a == 0) {
-                    Gizmos.DrawLine(verts[i][a].position, verts[i][2].position);
+                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[2].position);
                 }
                 
             }
@@ -384,18 +397,18 @@ public class Voronoi : MonoBehaviour {
                     }
                 }
             }
-            verts.Add(tempVerts.ToArray());
+            cornerTris.Add(new MeshTri(tempVerts.ToArray()));
         }
     }
 
     bool VertsContains(Vert vert) {
-        if (verts.Count == 0) {
+        if (cornerTris.Count == 0) {
             return false;
         }
 
-        for (int i = verts.Count - 1; i >= 0; i--) {
+        for (int i = cornerTris.Count - 1; i >= 0; i--) {
             for (int a = 2; a >= 0; a--) {
-                if (verts[i][a] == vert) {
+                if (cornerTris[i].vertisies[a] == vert) {
                     return true;
                 }
             }
