@@ -48,7 +48,7 @@ public class Voronoi : MonoBehaviour {
 
         cornerTris = new List<MeshTri>();
 
-        GenerateVerts();
+        GenerateMeshTris();
 
     }
 
@@ -74,6 +74,18 @@ public class Voronoi : MonoBehaviour {
             return (cicumCenter - other).sqrMagnitude < radiusSquared;
         }
 
+        /// <summary>
+        /// This function checks if a point is present within this delauny tri
+        /// </summary>
+        /// <param name="pt">The point we are checking against</param>
+        /// <returns>true if the point is contained within this tri, false if it is not</returns>
+        public bool TriContains( Vector3 pt) {
+            if (a == pt) return true;
+            if (b == pt) return true;
+            if (c == pt) return true;
+            return false;
+        }
+
         public static bool operator ==(DelaunyTriangle t1, DelaunyTriangle t2) {
             return t1.Equals(t2);
         }
@@ -88,7 +100,7 @@ public class Voronoi : MonoBehaviour {
         public Vert[] vertisies { get; } 
         //public Vector3 normal { get; }
         //public Vector2[] UVs { get; }
-       // public Mesh tri { get; }
+       //public Mesh tri { get; }
 
         public MeshTri(Vert[] vertisies ){
             this.vertisies = vertisies;
@@ -209,7 +221,7 @@ public class Voronoi : MonoBehaviour {
         Vector3 size = Vector3.one * .1f;
         if (drawDelauny) {
             foreach (DelaunyTriangle tri in triangles) {
-                if (TriContains(tri, pts[0])) {
+                if (tri.TriContains(pts[0])) {
                     Gizmos.color = Color.green;
                 } else {
                     Gizmos.color = Color.white;
@@ -291,6 +303,12 @@ public class Voronoi : MonoBehaviour {
         return result;
     }
 
+    /// <summary>
+    /// This functioin takes a list of Delauny Tris associated with a single site, and returns them so that they are in ajacent order 
+    /// </summary>
+    /// <param name="tris">the tris to be ordered</param>
+    /// <param name="site">the site they all share</param>
+    /// <returns> a list where the tris are in ajacent order </returns>
     List<Vector3> OrderedTris(List<DelaunyTriangle> tris, Vector3 site) {
         List<Vector3> orderedVerts = new List<Vector3>();
         List<DelaunyTriangle> orderedTris = new List<DelaunyTriangle>();
@@ -314,18 +332,25 @@ public class Voronoi : MonoBehaviour {
     }
 
 
-
+    /// <summary>
+    /// This function finds all tris associated with a particular site
+    /// </summary>
+    /// <param name="site"> The site the tris are associated with </param>
+    /// <returns> The list of associated tris </returns>
     List<DelaunyTriangle> FindTris(Vector3 site) {
         List<DelaunyTriangle> tris = new List<DelaunyTriangle>();
         for (int i = triangles.Count - 1; i >= 0; i--) {
-            if (TriContains(triangles[i], site)) {
+            if (triangles[i].TriContains(site)) {
                 tris.Add(triangles[i]);
             }
         }
         return tris;
     }
 
-
+    /// <summary>
+    /// This function returns a random point on a unit sphear
+    /// </summary>
+    /// <returns> The list of associated Tris </returns>
     public Vector3 GetRandomPoint() {
         Vector3 pt = Random.onUnitSphere;
         for (int i = pts.Length - 1; i >= 0; i--) {
@@ -336,6 +361,13 @@ public class Voronoi : MonoBehaviour {
         return pt;
     }
 
+    /// <summary>
+    /// This function checks if one tri is ajacent to another by checking if they share a corner vert that is not their shared site
+    /// </summary>
+    /// <param name="tri1">one of the tris being compared</param>
+    /// <param name="tri2">the other tri being compared</param>
+    /// <param name="site">the shared site</param>
+    /// <returns>true if the tris are ajacent, false if they are not</returns>
     bool TriAjacent(DelaunyTriangle tri1, DelaunyTriangle tri2, Vector3 site) {
         if (tri1.a == site) {
             if (tri1.b == tri2.a) return true;
@@ -362,9 +394,15 @@ public class Voronoi : MonoBehaviour {
         return false;
     }
 
-    void GenerateVerts() {
-  
+    /// <summary>
+    /// This function generates a mesh tri at each vert of our voronoi cell without generating duplicates
+    /// </summary>
+    void GenerateMeshTris() {
+        
+        //create a container for all vertexes generated thusfar
         List<Vert> unsortedVerts = new List<Vert>();
+
+        //store all cell vertexes
         for(int a = cells.Count -1; a >=0;a-- ) {
             for (int i = cells[a].orderedVerts.Count - 1; i >= 0; i--) {
                 //print("before: " + cells[a].site);
@@ -375,12 +413,11 @@ public class Voronoi : MonoBehaviour {
             }
         }
 
+        //create a new meshtri for each vert without generating duplicates
         for (int i = unsortedVerts.Count - 1; i >= 0; i-- ) {
             List<Vert> tempVerts = new List<Vert>();
 
            // if (VertsContains(unsortedVerts[i])) continue;
-            
-
             for (int a = unsortedVerts.Count - 1; a >= 0; a--) {
                 
                 if (unsortedVerts[i].cellVert == unsortedVerts[a].cellVert ) {
@@ -397,10 +434,16 @@ public class Voronoi : MonoBehaviour {
                     }
                 }
             }
+
             cornerTris.Add(new MeshTri(tempVerts.ToArray()));
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="vert"></param>
+    /// <returns></returns>
     bool VertsContains(Vert vert) {
         if (cornerTris.Count == 0) {
             return false;
@@ -417,11 +460,6 @@ public class Voronoi : MonoBehaviour {
         return false;
     }
 
-
-    bool TriContains(DelaunyTriangle tri, Vector3 pt) {
-        if (tri.a == pt) return true;
-        if (tri.b == pt) return true;
-        if (tri.c == pt) return true;
-        return false;
-    }
+    
+    
 }
