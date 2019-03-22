@@ -30,9 +30,9 @@ public class Voronoi : MonoBehaviour {
         for (int i = 0; i < pts.Length; i++) {
             //TODO:scale the mag of these unit vectors
             if (useCellRadius) {
-                pts[i] = GetRandomPoint();
+                pts[i] = GetRandomPoint() + transform.position;
             } else {
-                pts[i] = Random.onUnitSphere;
+                pts[i] = Random.onUnitSphere + transform.position;
             }
 
         }
@@ -118,7 +118,7 @@ public class Voronoi : MonoBehaviour {
 
             center /= vertisies.Length;
 
-            //Vector3 n = traansform.position - center;
+            //Vector3 n = transform.position - center;
             //n.Normalize();
             //normal = n;
 
@@ -307,7 +307,8 @@ public class Voronoi : MonoBehaviour {
                     }
                 }
             }
-        }*/
+        }
+        */
     }
 
     /// <summary>
@@ -417,6 +418,8 @@ public class Voronoi : MonoBehaviour {
         return false;
     }
 
+    
+
     /// <summary>
     /// This function generates a mesh tri for each set of verts that share a common cell-Vert and generates a mesh tri for them. 
     /// </summary>
@@ -448,6 +451,7 @@ public class Voronoi : MonoBehaviour {
         }
     }
 
+    
 
     /// <summary>
     /// This function generates a vert for each vert of each cell. 
