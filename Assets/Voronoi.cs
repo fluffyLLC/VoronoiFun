@@ -6,9 +6,10 @@ public class Voronoi : MonoBehaviour {
     [Range(20, 100)] public int numberOfPoints = 20;
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
     List<Cell> cells;
+    List<Vert> meshVerts;
     List<MeshTri> cornerTris = new List<MeshTri>();
     Vector3[] pts;
-    //Vector3 center = 
+    //Vector3 center =  
 
 
     int radius = 10;
@@ -48,7 +49,9 @@ public class Voronoi : MonoBehaviour {
 
         cornerTris = new List<MeshTri>();
 
-        GenerateMeshTris();
+        meshVerts = GenerateVerts();
+
+        GenerateCornerTris();
 
     }
 
@@ -123,32 +126,49 @@ public class Voronoi : MonoBehaviour {
         
     }
 
+    /// <summary>
+    /// This structure contains all of the information that defines a vert, these vertes are designed to be generated in association with a vornoi cell.
+    /// </summary>
     struct Vert {
+
+        /// <summary>
+        /// The location of the "cell vert" used to gnerate this verticie. It is used to determin the position of this vert. 
+        /// </summary>
         public Vector3 cellVert { get;  }
+        /// <summary>
+        /// The site of the vornoi cell this vert is pointing twords. It is used with cell vert to determin the position of the vert
+        /// </summary>
         public Vector3 site { get; }
+        /// <summary>
+        /// The world space position of this verticy
+        /// </summary>
         public Vector3 position { get; set; }
+        /// <summary>
+        /// This number is set to 0 by default, but should be set manualy upon creation. It is intended to be used to refrence the index of this verticy when generating triangles  
+        /// </summary>
+        public int index { get; set; }
+        /// <summary>
+        /// What percent along the vector pointing from cellVert to site the position value position should be set 
+        /// </summary>
         private float offset { get { return 0.025f; } }
 
-        public Vert(Vector3 cellVert, Vector3 site) : this() {
-            // print("recieved: " + cellVert);
+        public Vert(Vector3 cellVert, Vector3 site) {
             this.cellVert = cellVert;
-            // print("set: " + this.cellVert);
             this.site = site;
-            SetPosition();
+            position = Vector3.zero;//if we don't set position here it won't let us set it at the end of the function
+            index = 0;
+            position = SetPosition();
         }
 
-        void SetPosition() {
-            Vector3 vertToSite = cellVert - site;
+        Vector3 SetPosition() {
+            Vector3 vecToSite = cellVert - site;
+            float p =  offset / vecToSite.magnitude;
+            return Vector3.Lerp(cellVert, site, p);
             
-            float p =  offset / vertToSite.magnitude;
-            
-            position = Vector3.Lerp(cellVert, site, p);
-            
-            //print("p: " + p);
-            //print("vertToSite: " + vertToSite + ", mag: " + vertToSite.magnitude);
-            //print("position: " + position);
-            //Vector3.MoveTowards(vertToSite,site,
-            //position = vertToSite;
+        }
+
+        public void SetIndex(int index) {
+            this.index = index;
         }
 
         public static bool operator ==(Vert t1, Vert t2) {
@@ -161,6 +181,9 @@ public class Voronoi : MonoBehaviour {
 
     }
 
+    /// <summary>
+    /// This struct continains teh data that defines a voranoi cell
+    /// </summary>
     struct Cell {
 
         public List<DelaunyTriangle> cellTris { get; set; }
@@ -185,7 +208,7 @@ public class Voronoi : MonoBehaviour {
     /// <param name="points"></param>
     void Triangulate(Vector3[] points) {
         triangles = new List<DelaunyTriangle>();
-        int calculations = 0;
+        //int calculations = 0;
         foreach (Vector3 p1 in points) {
             foreach (Vector3 p2 in points) {
                 if (p1 == p2) continue;
@@ -199,7 +222,7 @@ public class Voronoi : MonoBehaviour {
                         if (p1 == p4) continue;
                         if (p2 == p4) continue;
                         if (p3 == p4) continue;
-                        calculations++;
+                        //calculations++;
                         if (tri.CloserThanVerts(p4)) {
                             success = false;
                             break;
@@ -348,7 +371,7 @@ public class Voronoi : MonoBehaviour {
     }
 
     /// <summary>
-    /// This function returns a random point on a unit sphear
+    /// This is a recursive function that returns a random point on a unit sphear as long as it is a certin distance from all other points
     /// </summary>
     /// <returns> The list of associated Tris </returns>
     public Vector3 GetRandomPoint() {
@@ -395,41 +418,27 @@ public class Voronoi : MonoBehaviour {
     }
 
     /// <summary>
-    /// This function generates a mesh tri at each vert of our voronoi cell without generating duplicates
+    /// This function generates a mesh tri for each set of verts that share a common cell-Vert and generates a mesh tri for them. 
     /// </summary>
-    void GenerateMeshTris() {
-        
-        //create a container for all vertexes generated thusfar
-        List<Vert> unsortedVerts = new List<Vert>();
-
-        //store all cell vertexes
-        for(int a = cells.Count -1; a >=0;a-- ) {
-            for (int i = cells[a].orderedVerts.Count - 1; i >= 0; i--) {
-                //print("before: " + cells[a].site);
-                Vert vert = new Vert(cells[a].orderedVerts[i], cells[a].site);
-                //print("after: " + vert.site);
-                unsortedVerts.Add(new Vert(cells[a].orderedVerts[i], cells[a].site));
-                
-            }
-        }
+    void GenerateCornerTris() {
 
         //create a new meshtri for each vert without generating duplicates
-        for (int i = unsortedVerts.Count - 1; i >= 0; i-- ) {
+        for (int i = meshVerts.Count - 1; i >= 0; i-- ) {
             List<Vert> tempVerts = new List<Vert>();
 
-           // if (VertsContains(unsortedVerts[i])) continue;
-            for (int a = unsortedVerts.Count - 1; a >= 0; a--) {
+            //if (VertsContains(unsortedVerts[i])) continue;
+            for (int a = meshVerts.Count - 1; a >= 0; a--) {
                 
-                if (unsortedVerts[i].cellVert == unsortedVerts[a].cellVert ) {
+                if (meshVerts[i].cellVert == meshVerts[a].cellVert ) {
                     //print(unsortedVerts[i].site + ", " + unsortedVerts[a].site);
-                    if (unsortedVerts[i].site != unsortedVerts[a].site) {
+                    if (meshVerts[i].site != meshVerts[a].site) {
                         
                         if (tempVerts.Count == 0) {
                             //print("r");
-                            tempVerts.Add(unsortedVerts[i]);
-                            tempVerts.Add(unsortedVerts[a]);
+                            tempVerts.Add(meshVerts[i]);
+                            tempVerts.Add(meshVerts[a]);
                         } else { // if (verts[2] == null) {
-                            tempVerts.Add(unsortedVerts[a]);
+                            tempVerts.Add(meshVerts[a]);
                         }
                     }
                 }
@@ -439,8 +448,36 @@ public class Voronoi : MonoBehaviour {
         }
     }
 
+
     /// <summary>
-    /// 
+    /// This function generates a vert for each vert of each cell. 
+    /// </summary>
+    /// <returns>A list of verts for each vert of each cell</returns>
+    List<Vert> GenerateVerts() {
+        List<Vert> verts = new List<Vert>();
+
+        for (int a = cells.Count - 1; a >= 0; a--)
+        {
+            for (int i = cells[a].orderedVerts.Count - 1; i >= 0; i--)
+            {
+                //Vert vert = new Vert(cells[a].orderedVerts[i], cells[a].site,);
+                verts.Add(new Vert(cells[a].orderedVerts[i], cells[a].site));
+
+            }
+        }
+
+        for (int i = 0; i < verts.Count - 1; i++) {
+            verts[i].SetIndex(i);
+        } 
+
+        return verts;
+    }
+
+
+
+    //HACK: this function needs to be renamed/might not be nessicary/could be repurposed
+    /// <summary>
+    /// This function checks if a vert is stored within this function
     /// </summary>
     /// <param name="vert"></param>
     /// <returns></returns>
