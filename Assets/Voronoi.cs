@@ -7,7 +7,8 @@ public class Voronoi : MonoBehaviour {
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
     List<Cell> cells;
     List<Vert> meshVerts;
-    List<MeshTri> cornerTris = new List<MeshTri>();
+    List<MeshTri> cornerTris;
+    List<MeshQuad> quads;
     Vector3[] pts;
     //Vector3 center =  
 
@@ -18,13 +19,19 @@ public class Voronoi : MonoBehaviour {
 
     public bool drawDelauny = false;
 
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////// Functions that are run by the engine
+
     void Start() {
 
     }
 
     void OnValidate() {
         pts = new Vector3[numberOfPoints];
-
+        cells = new List<Cell>();
+        cornerTris = new List<MeshTri>();
+        quads = new List<MeshQuad>();
 
         //loop set the location of a ll the points
         for (int i = 0; i < pts.Length; i++) {
@@ -40,20 +47,109 @@ public class Voronoi : MonoBehaviour {
         //triangulate the points
         Triangulate(pts);
 
-        cells = new List<Cell>();
-
         for (int i = pts.Length - 1; i >= 0; i--) {
             List<DelaunyTriangle> cellTris = FindTris(pts[i]);
             cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris, pts[i])));
         }
-
-        cornerTris = new List<MeshTri>();
 
         meshVerts = GenerateVerts();
 
         GenerateCornerTris();
 
     }
+
+    /// <summary>
+    /// Draws a line between each point within the triangles array
+    /// </summary>
+    void OnDrawGizmos()
+    {
+
+        Vector3 size = Vector3.one * .1f;
+        if (drawDelauny)
+        {
+            foreach (DelaunyTriangle tri in triangles)
+            {
+                if (tri.TriContains(pts[0]))
+                {
+                    Gizmos.color = Color.green;
+                }
+                else
+                {
+                    Gizmos.color = Color.white;
+                }
+                Gizmos.DrawLine(tri.a, tri.b);
+                Gizmos.DrawLine(tri.b, tri.c);
+                Gizmos.DrawLine(tri.c, tri.a);
+            }
+        }
+
+
+        Gizmos.color = Color.red;
+        //print(testCell.cellTris.Count);
+
+        foreach (Cell c in cells)
+        {
+            for (int i = c.orderedVerts.Count - 1; i >= 0; i--)
+            {
+                if (i > 0)
+                {
+                    Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
+                }
+                else
+                {
+                    // Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
+                }
+
+            }
+
+        }
+
+
+        for (int i = cornerTris.Count - 1; i >= 0; i--)
+        {
+            //print(verts[0][0].position);
+
+            for (int a = cornerTris[i].vertisies.Length - 1; a >= 0; a--)
+            {
+                //print(a + ": " + verts[i][a].position);
+                /*
+                Gizmos.color = Color.blue;
+                Gizmos.DrawLine(verts[i][a].cellVert, verts[i][a].position);
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawLine(verts[i][a].position, verts[i][a].site);
+                */
+
+
+                Gizmos.color = Color.green;
+                if (a > 0)
+                {
+                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[a - 1].position);
+                }
+                else if (a == 0)
+                {
+                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[2].position);
+                }
+
+            }
+        }
+
+        /*
+            foreach (Cell c in cells) {
+            for (int i = c.cellTris.Count - 1; i >= 0; i--) {
+                //print("runing");
+                for (int j = c.cellTris.Count - 1; j >= 0; j--) {
+
+                    if (c.cellTris[i] == c.cellTris[j]) continue;
+                    if (TriAjacent(c.cellTris[i], c.cellTris[j], c.site)) {
+                        Gizmos.DrawLine(c.cellTris[i].cicumCenter, c.cellTris[j].cicumCenter);
+                    }
+                }
+            }
+        }
+        */
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////Structs
 
     struct DelaunyTriangle {
         //public int i1;
@@ -124,6 +220,30 @@ public class Voronoi : MonoBehaviour {
 
         }
         
+    }
+
+    struct MeshQuad {
+
+        public Vert[] verts;
+        public MeshTri a;
+        public MeshTri b;
+
+        public MeshQuad(Vert[] verts) {
+            this.verts = verts;
+            Vert blank = new Vert(Vector3.zero, Vector3.zero);
+            Vert[] blankTri = new Vert[3] {blank, blank, blank };
+            a = new MeshTri(blankTri);
+            b = new MeshTri(blankTri);
+            GenerateTris();
+        }
+
+        private void GenerateTris() {
+            //TODO: Calculate Tris 
+        }
+         
+
+
+
     }
 
     /// <summary>
@@ -200,6 +320,7 @@ public class Voronoi : MonoBehaviour {
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////Logic
 
 
     /// <summary>
@@ -234,81 +355,6 @@ public class Voronoi : MonoBehaviour {
         }
 
         //print($"triangulization complete after {calculations} calculations");
-    }
-
-    /// <summary>
-    /// Draws a line between each point within the triangles array
-    /// </summary>
-    void OnDrawGizmos() {
-
-        Vector3 size = Vector3.one * .1f;
-        if (drawDelauny) {
-            foreach (DelaunyTriangle tri in triangles) {
-                if (tri.TriContains(pts[0])) {
-                    Gizmos.color = Color.green;
-                } else {
-                    Gizmos.color = Color.white;
-                }
-                Gizmos.DrawLine(tri.a, tri.b);
-                Gizmos.DrawLine(tri.b, tri.c);
-                Gizmos.DrawLine(tri.c, tri.a);
-            }
-        }
-
-
-        Gizmos.color = Color.red;
-        //print(testCell.cellTris.Count);
-
-        foreach (Cell c in cells) {
-            for (int i = c.orderedVerts.Count - 1; i >= 0; i--) {
-                if (i > 0) {
-                    Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
-                } else {
-                    // Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
-                }
-
-            }
-
-        }
-
-        
-        for (int i = cornerTris.Count-1; i >= 0; i--) {
-            //print(verts[0][0].position);
-            
-            for (int a = cornerTris[i].vertisies.Length-1; a >= 0; a--) {
-                //print(a + ": " + verts[i][a].position);
-                /*
-                Gizmos.color = Color.blue;
-                Gizmos.DrawLine(verts[i][a].cellVert, verts[i][a].position);
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(verts[i][a].position, verts[i][a].site);
-                */
-
-
-                Gizmos.color = Color.green;
-                if (a > 0 ) {
-                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[a - 1].position);
-                } else if ( a == 0) {
-                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[2].position);
-                }
-                
-            }
-        }
-
-        /*
-            foreach (Cell c in cells) {
-            for (int i = c.cellTris.Count - 1; i >= 0; i--) {
-                //print("runing");
-                for (int j = c.cellTris.Count - 1; j >= 0; j--) {
-
-                    if (c.cellTris[i] == c.cellTris[j]) continue;
-                    if (TriAjacent(c.cellTris[i], c.cellTris[j], c.site)) {
-                        Gizmos.DrawLine(c.cellTris[i].cicumCenter, c.cellTris[j].cicumCenter);
-                    }
-                }
-            }
-        }
-        */
     }
 
     /// <summary>
@@ -477,7 +523,45 @@ public class Voronoi : MonoBehaviour {
         return verts;
     }
 
+    void GenerateQuads() {
+        //This a list ov vert arrays
+        //each vert array contains two verts that share the same cellVert  
+        List<Vert[]> vertpairs = PairVerts();
 
+        for (int a = 0; a < vertpairs.Count; a++) {
+            for (int b = 0; b < vertpairs.Count; b++) {
+
+
+            }
+        }
+        
+
+    } 
+
+
+    private List<Vert[]> PairVerts() {
+        List<Vert[]> vertPairs = new List<Vert[]>();
+
+        for (int i = 0; i < cornerTris.Count; i++) {
+            Vert[] cv = cornerTris[i].vertisies;
+            Vert[] a = new Vert[2] {cv[0], cv[1]};
+            Vert[] b = new Vert[2] {cv[1], cv[2]};
+            Vert[] c = new Vert[2] {cv[2], cv[0]};
+
+            vertPairs.Add(a);
+            vertPairs.Add(b);
+            vertPairs.Add(c);
+        }
+
+        return vertPairs;
+    }
+
+    private bool CheckForParalell(Vert[] a ,Vert[] b) {
+        if (a[0].site == b[0].site && a[1].site == b[1].site) return true;   
+        if (a[0].site == b[1].site && a[1].site == b[0].site) return true;
+
+        return false;
+    }
 
     //HACK: this function needs to be renamed/might not be nessicary/could be repurposed
     /// <summary>
