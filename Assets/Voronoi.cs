@@ -56,6 +56,8 @@ public class Voronoi : MonoBehaviour {
 
         GenerateCornerTris();
 
+        GenerateQuads();
+
     }
 
     /// <summary>
@@ -105,12 +107,17 @@ public class Voronoi : MonoBehaviour {
         }
 
 
+
+
+        //print("Corner Tris:" + cornerTris.Count);
+
         for (int i = cornerTris.Count - 1; i >= 0; i--)
         {
             //print(verts[0][0].position);
-
+           // print(cornerTris[i].vertisies.Length);
             for (int a = cornerTris[i].vertisies.Length - 1; a >= 0; a--)
             {
+                //print(cornerTris[i].vertisies.Length);
                 //print(a + ": " + verts[i][a].position);
                 /*
                 Gizmos.color = Color.blue;
@@ -127,11 +134,46 @@ public class Voronoi : MonoBehaviour {
                 }
                 else if (a == 0)
                 {
-                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[2].position);
+                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[cornerTris[i].vertisies.Length-1].position);
                 }
 
             }
         }
+
+        
+        for (int i = 0; i < quads.Count; i++)
+        {
+            Gizmos.color = Color.cyan;
+            for (int v = quads[i].a.vertisies.Length - 1; v >= 0; v--)
+            {
+
+                if (v > 0)
+                {
+                    Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[v - 1].position);
+                }
+                else if (v == 0)
+                {
+                    Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[2].position);
+                }
+            }
+            
+            Gizmos.color = Color.yellow;
+            for (int j = quads[i].b.vertisies.Length - 1; j >= 0; j--)
+            {
+
+                if (j > 0)
+                {
+                    Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[j - 1].position);
+                }
+                else if (j == 0)
+                {
+                    Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[2].position);
+                }
+            }
+            
+        }
+        
+
 
         /*
             foreach (Cell c in cells) {
@@ -219,28 +261,70 @@ public class Voronoi : MonoBehaviour {
             //normal = n;
 
         }
-        
+
+        public static bool operator ==(MeshTri t1, MeshTri t2)
+        {
+            return t1.Equals(t2);
+        }
+
+        public static bool operator !=(MeshTri t1, MeshTri t2)
+        {
+            return !t1.Equals(t2);
+        }
+        /*
+        public override bool Equals(object obj)
+        {
+            MeshTri tri = (MeshTri)obj;
+
+            if (this.vertisies.Length != tri.vertisies.Length) return false;
+
+            int numEquals = 0;
+
+            for (int i = 0; i < this.vertisies.Length; i++)
+            {
+                for (int j = 0; j < tri.vertisies.Length; j++)
+                {
+                    if (i == j) continue;
+                    if (this.vertisies[i] == tri.vertisies[j]) {
+                        numEquals++;
+                    }
+                }
+            }
+
+            if (numEquals == this.vertisies.Length) return true;
+
+
+            return false;
+        }
+        */
+
+
     }
 
     struct MeshQuad {
 
-        public Vert[] verts;
+        public Vert[] vertisies;
         public MeshTri a;
         public MeshTri b;
 
-        public MeshQuad(Vert[] verts) {
-            this.verts = verts;
-            Vert blank = new Vert(Vector3.zero, Vector3.zero);
-            Vert[] blankTri = new Vert[3] {blank, blank, blank };
-            a = new MeshTri(blankTri);
-            b = new MeshTri(blankTri);
-            GenerateTris();
-        }
+        public MeshQuad(Vert[] vertisies) {
+            this.vertisies = vertisies;
 
-        private void GenerateTris() {
-            //TODO: Calculate Tris 
+            Vert[] aVerts;
+            Vert[] bVerts;
+            if (vertisies[0].site == vertisies[2].site)
+            {
+                aVerts = new Vert[3] { vertisies[0], vertisies[1], vertisies[2] };
+                bVerts = new Vert[3] { vertisies[2], vertisies[3], vertisies[1] };
+            }
+            else
+            {
+                aVerts = new Vert[3] { vertisies[0], vertisies[1], vertisies[3] };
+                bVerts = new Vert[3] { vertisies[3], vertisies[2], vertisies[1] };
+            }
+            a = new MeshTri(aVerts);
+            b = new MeshTri(bVerts);
         }
-         
 
 
 
@@ -270,7 +354,7 @@ public class Voronoi : MonoBehaviour {
         /// <summary>
         /// What percent along the vector pointing from cellVert to site the position value position should be set 
         /// </summary>
-        private float offset { get { return 0.025f; } }
+        static float offset { get { return 0.025f; } }
 
         public Vert(Vector3 cellVert, Vector3 site) {
             this.cellVert = cellVert;
@@ -297,6 +381,17 @@ public class Voronoi : MonoBehaviour {
 
         public static bool operator !=(Vert t1, Vert t2) {
             return !t1.Equals(t2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            Vert vert = (Vert)obj;
+
+            if (this.position != vert.position) return false;
+            if (this.cellVert != vert.cellVert) return false;
+            if (this.site != vert.site) return false;
+
+            return true;
         }
 
     }
@@ -383,6 +478,9 @@ public class Voronoi : MonoBehaviour {
         List<Vector3> orderedVerts = new List<Vector3>();
         List<DelaunyTriangle> orderedTris = new List<DelaunyTriangle>();
         orderedTris.Add(tris[0]);
+        //print("Tris in:" + tris.Count);
+       
+
 
         for (int i = 0; i <= tris.Count - 1; i++) {
 
@@ -398,6 +496,7 @@ public class Voronoi : MonoBehaviour {
             orderedVerts.Add(orderedTris[i].cicumCenter);
         }
 
+        //print("Tris out:" + tris.Count);
         return orderedVerts;
     }
 
@@ -470,34 +569,78 @@ public class Voronoi : MonoBehaviour {
     /// This function generates a mesh tri for each set of verts that share a common cell-Vert and generates a mesh tri for them. 
     /// </summary>
     void GenerateCornerTris() {
+        List<Vector3> CompletedVerts = new List<Vector3>();
 
         //create a new meshtri for each vert without generating duplicates
         for (int i = meshVerts.Count - 1; i >= 0; i-- ) {
             List<Vert> tempVerts = new List<Vert>();
+            tempVerts.Add(meshVerts[i]);
+            if (CompletedVerts.Contains(meshVerts[i].cellVert)) continue; 
 
             //if (VertsContains(unsortedVerts[i])) continue;
             for (int a = meshVerts.Count - 1; a >= 0; a--) {
-                
+                if (i == a) continue;
+
                 if (meshVerts[i].cellVert == meshVerts[a].cellVert ) {
                     //print(unsortedVerts[i].site + ", " + unsortedVerts[a].site);
                     if (meshVerts[i].site != meshVerts[a].site) {
-                        
-                        if (tempVerts.Count == 0) {
-                            //print("r");
-                            tempVerts.Add(meshVerts[i]);
-                            tempVerts.Add(meshVerts[a]);
-                        } else { // if (verts[2] == null) {
-                            tempVerts.Add(meshVerts[a]);
-                        }
+
+                        tempVerts.Add(meshVerts[a]);
+
                     }
                 }
             }
-
+            CompletedVerts.Add(tempVerts[0].cellVert);
+            tempVerts = ClearDuplicateVerts(tempVerts);
             cornerTris.Add(new MeshTri(tempVerts.ToArray()));
         }
+        cornerTris = ClearDuplicateTris(cornerTris);
     }
 
-    
+
+    List<Vert> ClearDuplicateVerts(List<Vert> verts){
+        print("verts in: " + verts.Count);
+        List<Vert> nonDupeVerts = new List<Vert>();//verts;
+        int showMeTheDupes = 0;
+        nonDupeVerts.Add(verts[verts.Count-1]);
+     
+        for (int i = verts.Count - 1; i >= 0; i--)
+        {
+            for (int j = nonDupeVerts.Count - 1; j >= 0; j--)
+            {
+                if (i == j) continue;
+                if (verts[i] != nonDupeVerts[j] && !nonDupeVerts.Contains(verts[i])){
+                    nonDupeVerts.Add(verts[i]);
+                }
+            }
+        }
+
+        print("verts out: " + nonDupeVerts.Count);
+        return nonDupeVerts;
+    }
+
+    List<MeshTri> ClearDuplicateTris(List<MeshTri> tris) {
+        print("tris in: " + tris.Count);
+        List<MeshTri> nonDupeTris = new List<MeshTri>();//verts;
+        //int showMeTheDupes = 0;
+        nonDupeTris.Add(tris[tris.Count - 1]);
+
+        for (int i = tris.Count - 1; i >= 0; i--)
+        {
+            for (int j = nonDupeTris.Count - 1; j >= 0; j--)
+            {
+                if (i == j) continue;
+                if (tris[i] != nonDupeTris[j] && !nonDupeTris.Contains(tris[i]))
+                {
+                    nonDupeTris.Add(tris[i]);
+                }
+            }
+        }
+
+        print("tris out: " + nonDupeTris.Count);
+        return nonDupeTris;
+    }
+
 
     /// <summary>
     /// This function generates a vert for each vert of each cell. 
@@ -505,6 +648,7 @@ public class Voronoi : MonoBehaviour {
     /// <returns>A list of verts for each vert of each cell</returns>
     List<Vert> GenerateVerts() {
         List<Vert> verts = new List<Vert>();
+        int vertCount = 0;
 
         for (int a = cells.Count - 1; a >= 0; a--)
         {
@@ -512,31 +656,48 @@ public class Voronoi : MonoBehaviour {
             {
                 //Vert vert = new Vert(cells[a].orderedVerts[i], cells[a].site,);
                 verts.Add(new Vert(cells[a].orderedVerts[i], cells[a].site));
+                vertCount++;
 
             }
         }
 
         for (int i = 0; i < verts.Count - 1; i++) {
             verts[i].SetIndex(i);
-        } 
+        }
 
+        print("Total Verts:" + verts.Count);
+        //print(vertCount/cells.Count);
+        
         return verts;
     }
+
+
 
     void GenerateQuads() {
         //This a list ov vert arrays
         //each vert array contains two verts that share the same cellVert  
-        List<Vert[]> vertpairs = PairVerts();
-
-        for (int a = 0; a < vertpairs.Count; a++) {
-            for (int b = 0; b < vertpairs.Count; b++) {
+        List<Vert[]> vertPairs = PairVerts();
+        List<Vert[]> detectedPairs = new List<Vert[]>();
 
 
+        for (int a = 0; a < vertPairs.Count; a++) {
+            if (detectedPairs.Contains(vertPairs[a])) continue;
+
+            for (int b = 0; b < vertPairs.Count; b++) {
+                if (a == b) continue;
+                if (detectedPairs.Contains(vertPairs[b])) continue;
+                if (CheckForParalell(vertPairs[a],vertPairs[b])) {
+                    Vert[] combinedVerts = new Vert[4] { vertPairs[a][0], vertPairs[a][1], vertPairs[b][0], vertPairs[b][1]};
+                    quads.Add(new MeshQuad(combinedVerts));
+                    detectedPairs.Add(vertPairs[b]);
+                    detectedPairs.Add(vertPairs[a]);
+                    continue;
+                }
             }
         }
-        
-
     } 
+
+
 
 
     private List<Vert[]> PairVerts() {
@@ -557,8 +718,22 @@ public class Voronoi : MonoBehaviour {
     }
 
     private bool CheckForParalell(Vert[] a ,Vert[] b) {
-        if (a[0].site == b[0].site && a[1].site == b[1].site) return true;   
-        if (a[0].site == b[1].site && a[1].site == b[0].site) return true;
+        Vector3 aOne = a[0].site;
+        Vector3 aTwo = a[1].site;
+        Vector3 bOne = b[0].site;
+        Vector3 bTwo = b[1].site;
+        int numSites = 4;
+
+        if (aOne == bOne) numSites--;
+        if (aTwo == bTwo) numSites--;
+        if (aOne == bTwo) numSites--;
+        if (aTwo == bOne) numSites--;
+
+        if (numSites == 2)
+        {
+            if (a[0].site == b[0].site && a[1].site == b[1].site) return true;
+            if (a[0].site == b[1].site && a[1].site == b[0].site) return true;
+        }
 
         return false;
     }
