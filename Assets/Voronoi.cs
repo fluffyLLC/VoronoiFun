@@ -12,6 +12,8 @@ public class Voronoi : MonoBehaviour
     List<MeshQuad> quads;
     Vector3[] pts;
 
+    Mesh voronoiMesh;
+
     //TODO: remove this after debug is complete
     public int numVertList = 0;
     public List<Vector3> badSite;
@@ -86,6 +88,8 @@ public class Voronoi : MonoBehaviour
         GenerateCornerTris();
 
         GenerateQuads();
+
+        GenerateMesh();
 
     }
 
@@ -306,29 +310,63 @@ public class Voronoi : MonoBehaviour
     struct MeshTri
     {
         public Vert[] vertisies { get; }
-        //public Vector3 normal { get; }
-        //public Vector2[] UVs { get; }
-        //public Mesh tri { get; }
+        public Vector3 center { get; }
+        public Vector3 normal { get; }
+        public Vector2[] UVs { get; }
+        public int[] tri { get; }
 
-        public MeshTri(Vert[] vertisies)
+        public MeshTri(Vert[] vertisies, Vector3 center)
         {
             this.vertisies = vertisies;
+            this.center = center;
+            UVs = new Vector2[] {new Vector2(0,0),new Vector2(0,1),new Vector2(1,1)};
+            tri = new int[3];
+            normal = Vector3.zero;
+
+            //normal = CalcNormal();
+            ArrangeVerts();
         }
 
-        private void CalcNormal()
+        private void ArrangeVerts(){
+            Vector3 targetNormal = CalcTargetNormal();
+            Vector3 currentNormal = CalcCurrentNormal();
+
+            //TODO: take the dot product of target normal vs current normal, if negative reverse vertisy order
+
+        }
+
+        private Vector3 CalcCurrentNormal()
         {
-            Vector3 center = Vector3.zero;
+            //Refrence: https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
+
+
+            Vector3 n;
+
+            Vector3 U = vertisies[1].position - vertisies[0].position;
+            Vector3 V = vertisies[2].position - vertisies[0].position;
+
+            n = Vector3.Cross(U, V);
+
+            n.Normalize();
+
+            return n;
+        }
+
+
+        private Vector3 CalcTargetNormal()
+        {
+            Vector3 avgPosition = Vector3.zero;
 
             for (int i = vertisies.Length - 1; i >= 0; i--)
             {
-                center += vertisies[i].position;
+                avgPosition += vertisies[i].position;
             }
 
-            center /= vertisies.Length;
+            avgPosition /= vertisies.Length;
 
-            //Vector3 n = transform.position - center;
-            //n.Normalize();
-            //normal = n;
+            Vector3 n = avgPosition - center;
+            n.Normalize();
+            return n;
 
         }
 
@@ -341,6 +379,7 @@ public class Voronoi : MonoBehaviour
         {
             return !t1.Equals(t2);
         }
+
         /*
         public override bool Equals(object obj)
         {
@@ -371,21 +410,24 @@ public class Voronoi : MonoBehaviour
 
     }
 
+
     struct MeshQuad
     {
 
         public Vert[] vertisies;
+        public Vector3 center;
         public MeshTri a;
         public MeshTri b;
 
-        public MeshQuad(Vert[] vertisies)
+        public MeshQuad(Vert[] vertisies, Vector3 center)
         {
             this.vertisies = vertisies;
-
+            this.center = center;
             Vert[] aVerts;
             Vert[] bVerts;
             if (vertisies[0].site == vertisies[2].site)
             {
+
                 aVerts = new Vert[3] { vertisies[0], vertisies[1], vertisies[2] };
                 bVerts = new Vert[3] { vertisies[2], vertisies[3], vertisies[1] };
             }
@@ -394,8 +436,8 @@ public class Voronoi : MonoBehaviour
                 aVerts = new Vert[3] { vertisies[0], vertisies[1], vertisies[3] };
                 bVerts = new Vert[3] { vertisies[3], vertisies[2], vertisies[1] };
             }
-            a = new MeshTri(aVerts);
-            b = new MeshTri(bVerts);
+            a = new MeshTri(aVerts,center);
+            b = new MeshTri(bVerts,center);
         }
 
 
@@ -786,7 +828,7 @@ public class Voronoi : MonoBehaviour
                 }
             }
             
-            cornerTris.Add(new MeshTri(tempVerts.ToArray()));
+            cornerTris.Add(new MeshTri(tempVerts.ToArray(),transform.position));
         }
         //cornerTris = ClearDuplicateTris(cornerTris);
     }
@@ -904,7 +946,7 @@ public class Voronoi : MonoBehaviour
                 if (CheckForParalell(vertPairs[a], vertPairs[b]))
                 {
                     Vert[] combinedVerts = new Vert[4] { vertPairs[a][0], vertPairs[a][1], vertPairs[b][0], vertPairs[b][1] };
-                    quads.Add(new MeshQuad(combinedVerts));
+                    quads.Add(new MeshQuad(combinedVerts, transform.position));
                     detectedPairs.Add(vertPairs[b]);
                     detectedPairs.Add(vertPairs[a]);
                     continue;
@@ -982,6 +1024,65 @@ public class Voronoi : MonoBehaviour
         }
 
         return false;
+    }
+
+    void GenerateMesh() {
+
+        //TODO: use the Triangles Built in Logic to set UVs  
+
+
+        Vector3[] finalVerts;
+
+
+
+        List<Vector3> tempVertHolder = new List<Vector3>();
+
+        for (int i = 0; i < meshVerts.Count; i++)
+        {
+            tempVertHolder.Add(meshVerts[i].position);
+        }
+
+        finalVerts = tempVertHolder.ToArray();
+
+
+
+        int[] finalTris;
+
+        List<int> tempTriHolder = new List<int>();
+        for (int i = 0; i < cornerTris.Count; i++)
+        {
+            tempTriHolder.Add(cornerTris[i].vertisies[0].index);
+            tempTriHolder.Add(cornerTris[i].vertisies[1].index);
+            tempTriHolder.Add(cornerTris[i].vertisies[2].index);
+        }
+
+        for (int i = 0; i < quads.Count; i++) {
+
+            tempTriHolder.Add(quads[i].a.vertisies[0].index);
+            tempTriHolder.Add(quads[i].a.vertisies[1].index);
+            tempTriHolder.Add(quads[i].a.vertisies[2].index);
+
+            tempTriHolder.Add(quads[i].b.vertisies[0].index);
+            tempTriHolder.Add(quads[i].b.vertisies[1].index);
+            tempTriHolder.Add(quads[i].b.vertisies[2].index);
+
+        }
+
+            finalTris = tempTriHolder.ToArray();
+
+
+
+        Vector2[] UVs = new Vector2[finalVerts.Length];
+
+        voronoiMesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = voronoiMesh;
+        voronoiMesh.vertices = finalVerts;
+        voronoiMesh.triangles = finalTris;
+        voronoiMesh.uv = UVs;
+        
+
+
+
     }
 
 
