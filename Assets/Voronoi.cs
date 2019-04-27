@@ -23,6 +23,9 @@ public class Voronoi : MonoBehaviour
     float cellRadius = .25f;
 
     public bool drawDelauny = false;
+    public bool drawCells = true;
+    public bool drawCorners = true;
+    public bool drawQuads = true;
 
 
 
@@ -56,17 +59,25 @@ public class Voronoi : MonoBehaviour
 
         }
 
-        print("pts: " + pts.Length);
+       //print("pts: " + pts.Length);
         //triangulate the points
         Triangulate(pts);
 
+       //print("DTris: " + triangles.Count);
+
         triangles = ClearDuplicateTris(triangles);
 
-        print("DTris: " + triangles.Count);
+       //print("nonDTris: " + triangles.Count);
+
+        //triangles = ClearDuplicateTris(triangles);
+
+        //print("nonDTris 2: " + triangles.Count);
 
         for (int i = pts.Length - 1; i >= 0; i--)
         {
+            
             List<DelaunyTriangle> cellTris = FindTris(pts[i]);
+            //print(cellTris.Count);
             cells.Add(new Cell(pts[i], cellTris, OrderedTris(cellTris, pts[i])));
         }
 
@@ -85,18 +96,18 @@ public class Voronoi : MonoBehaviour
     {
 
         Vector3 size = Vector3.one * .1f;
-        Gizmos.color = new Color(0,1,0,0.25f);
+        //Gizmos.color = new Color(0,1,0,0.25f);
         if (drawDelauny)
         {
             foreach (DelaunyTriangle tri in triangles)
             {
                 if (tri.TriContains(pts[0]))
                 {
-                   // Gizmos.color = Color.green;
+                    Gizmos.color = Color.green;
                 }
                 else
                 {
-                   // Gizmos.color = Color.white;
+                    Gizmos.color = Color.white;
                 }
                 Gizmos.DrawLine(tri.a, tri.b);
                 Gizmos.DrawLine(tri.b, tri.c);
@@ -104,93 +115,100 @@ public class Voronoi : MonoBehaviour
             }
         }
 
-
-        Gizmos.color = new Color(1, 0, 0, .05f); //Color.red;
-        //print(testCell.cellTris.Count);
-
-        foreach (Cell c in cells)
+        if (drawCells)
         {
-            for (int i = c.orderedVerts.Count - 1; i >= 0; i--)
+            Gizmos.color = Color.black; //new Color(1, 0, 0, .05f); //Color.red;
+                                      //print(testCell.cellTris.Count);
+
+            foreach (Cell c in cells)
             {
-                if (i > 0)
+                for (int i = c.orderedVerts.Count - 1; i >= 0; i--)
                 {
-                    Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
-                }
-                else
-                {
-                    Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
+                    if (i > 0)
+                    {
+                        Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[i - 1]);
+                    }
+                    else
+                    {
+                        Gizmos.DrawLine(c.orderedVerts[i], c.orderedVerts[c.orderedVerts.Count - 1]);
+                    }
+
                 }
 
             }
-
         }
 
 
 
 
         //print("Corner Tris:" + cornerTris.Count);
-
-        for (int i = cornerTris.Count - 1; i >= 0; i--)
+        if (drawCorners)
         {
-            //print(verts[0][0].position);
-            // print(cornerTris[i].vertisies.Length);
-            for (int a = cornerTris[i].vertisies.Length - 1; a >= 0; a--)
+            for (int i = cornerTris.Count - 1; i >= 0; i--)
             {
-
-                //print(cornerTris[i].vertisies.Length);
-                //print(a + ": " + verts[i][a].position);
-                /*
-                Gizmos.color = Color.blue;
-                Gizmos.DrawLine(verts[i][a].cellVert, verts[i][a].position);
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(verts[i][a].position, verts[i][a].site);
-                */
-
-
-                Gizmos.color = Color.green;
-                if (a > 0)
+                //print(verts[0][0].position);
+                // print(cornerTris[i].vertisies.Length);
+                for (int a = cornerTris[i].vertisies.Length - 1; a >= 0; a--)
                 {
-                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[a - 1].position);
-                }
-                else if (a == 0)
-                {
-                    Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[cornerTris[i].vertisies.Length - 1].position);
-                }
 
+                    //print(cornerTris[i].vertisies.Length);
+                    //print(a + ": " + verts[i][a].position);
+                    /*
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawLine(verts[i][a].cellVert, verts[i][a].position);
+                    Gizmos.color = Color.magenta;
+                    Gizmos.DrawLine(verts[i][a].position, verts[i][a].site);
+                    */
+
+
+                    Gizmos.color = Color.green;
+                    if (a > 0)
+                    {
+                        Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[a - 1].position);
+                    }
+                    else if (a == 0)
+                    {
+                        Gizmos.DrawLine(cornerTris[i].vertisies[a].position, cornerTris[i].vertisies[cornerTris[i].vertisies.Length - 1].position);
+                    }
+
+                }
             }
         }
 
-       
-        for (int i = 0; i < quads.Count; i++)
+
+        if (drawQuads)
         {
-            Gizmos.color = Color.cyan;
-            for (int v = quads[i].a.vertisies.Length - 1; v >= 0; v--)
+            for (int i = 0; i < quads.Count; i++)
             {
+                Gizmos.color = Color.cyan;
+                for (int v = quads[i].a.vertisies.Length - 1; v >= 0; v--)
+                {
 
-                if (v > 0)
-                {
-                    Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[v - 1].position);
+                    if (v > 0)
+                    {
+                        Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[v - 1].position);
+                    }
+                    else if (v == 0)
+                    {
+                        Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[2].position);
+                    }
                 }
-                else if (v == 0)
+
+                Gizmos.color = Color.yellow;
+                for (int j = quads[i].b.vertisies.Length - 1; j >= 0; j--)
                 {
-                    Gizmos.DrawLine(quads[i].a.vertisies[v].position, quads[i].a.vertisies[2].position);
+
+                    if (j > 0)
+                    {
+                        Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[j - 1].position);
+                    }
+                    else if (j == 0)
+                    {
+                        Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[2].position);
+                    }
                 }
+
             }
-
-            Gizmos.color = Color.yellow;
-            for (int j = quads[i].b.vertisies.Length - 1; j >= 0; j--)
-            {
-
-                if (j > 0)
-                {
-                    Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[j - 1].position);
-                }
-                else if (j == 0)
-                {
-                    Gizmos.DrawLine(quads[i].b.vertisies[j].position, quads[i].b.vertisies[2].position);
-                }
-            }
-
         }
         
 
@@ -224,17 +242,19 @@ public class Voronoi : MonoBehaviour
         //public int i1;
         //public int i2;
         //public int i3;
+        //public int index { get; }
         public Vector3 a { get; }
         public Vector3 b { get; }
         public Vector3 c { get; }
         public Vector3 cicumCenter { get; }
         public float radiusSquared { get; }
 
-        public DelaunyTriangle(Vector3 a, Vector3 b, Vector3 c)
+        public DelaunyTriangle(Vector3 a, Vector3 b, Vector3 c)//,int index)
         {
             this.a = a;
             this.b = b;
             this.c = c;
+            //this.index = index;
             cicumCenter = Circumscribe(a, b, c);
             radiusSquared = (cicumCenter - a).sqrMagnitude;
         }
@@ -257,11 +277,17 @@ public class Voronoi : MonoBehaviour
             return false;
         }
 
+        public bool TriSame(DelaunyTriangle tri) {
+            if (a == tri.a && b == tri.b && c == tri.c) return true;
+            return false;
+        }
+
         public bool TriEquivelent(DelaunyTriangle tri)
         {
             if (a == tri.a && b == tri.b && c == tri.c) return true;
             if (a == tri.b && b == tri.c && c == tri.a) return true;
             if (a == tri.c && b == tri.a && c == tri.b) return true;
+            if (cicumCenter == tri.cicumCenter) return true;
             return false;
         }
 
@@ -427,12 +453,12 @@ public class Voronoi : MonoBehaviour
 
         public void PrintAll() {
 
-            print("Index:" + index);
-            print("Position:" + position);
-            print("CellVert:" + cellVert);
-            print("Site:" + site);
-            print("SiteIndex: " + siteIndex);
-            print("Offset: " + offset);
+           //print("Index:" + index);
+           //print("Position:" + position);
+           //print("CellVert:" + cellVert);
+           //print("Site:" + site);
+           //print("SiteIndex: " + siteIndex);
+           //print("Offset: " + offset);
 
         }
 
@@ -539,17 +565,19 @@ public class Voronoi : MonoBehaviour
     List<DelaunyTriangle> ClearDuplicateTris(List<DelaunyTriangle> tris)
     {
         //print("tris in: " + tris.Count);
-        List<DelaunyTriangle> nonDupeTris = tris;// new List<DelaunyTriangle>();//verts;
+        List<DelaunyTriangle> nonDupeTris = new List<DelaunyTriangle>();// = tris;
+        // new List<DelaunyTriangle>();//verts;
                                                         //int showMeTheDupes = 0;
-        nonDupeTris.Add(tris[0]);
+        
 
-        for (int i = tris.Count - 1; i >= 0; i--)
+        for (int i = 0; i < tris.Count; i++)
         {
+            nonDupeTris.Add(tris[i]);
             for (int j = nonDupeTris.Count-1; j >= 0 ; j--)
             {
-                if (i == j) continue;
+                if (nonDupeTris[j].TriSame(tris[i])) continue;
 
-                if (!nonDupeTris[j].TriEquivelent(tris[i]) && !nonDupeTris.Contains(tris[i]))
+                if (nonDupeTris[j].TriEquivelent(tris[i]))
                 {
                     nonDupeTris.RemoveAt(j);
                 }
@@ -558,8 +586,10 @@ public class Voronoi : MonoBehaviour
 
         //print("tris out: " + nonDupeTris.Count);
         return nonDupeTris;
+
     }
 
+    /*
     bool TrianglesContains(Vector3 pt) {
         for (int i = 0; i < triangles.Count; i++)
         {
@@ -569,7 +599,7 @@ public class Voronoi : MonoBehaviour
             }
         }
         return false;
-    }
+    }*/
 
     /// <summary>
     /// Returns the circumcenter of 3 vectors. The circumcenter is equidistant from all 3 vectors.
@@ -596,8 +626,10 @@ public class Voronoi : MonoBehaviour
     /// <returns> a list where the tris are in ajacent order </returns>
     List<Vector3> OrderedTris(List<DelaunyTriangle> tris, Vector3 site)
     {
+        if (tris.Count == 0) return new List<Vector3>();// { Vector3.zero };
         List<Vector3> orderedVerts = new List<Vector3>();
         List<DelaunyTriangle> orderedTris = new List<DelaunyTriangle>();
+       //print("Tris in:" + tris.Count);
         orderedTris.Add(tris[0]);
         //print("Tris in:" + tris.Count);
 
@@ -634,9 +666,9 @@ public class Voronoi : MonoBehaviour
     List<DelaunyTriangle> FindTris(Vector3 site)
     {
         List<DelaunyTriangle> tris = new List<DelaunyTriangle>();
-        for (int i = triangles.Count - 1; i >= 0; i--)
+        for (int i = 0; i < triangles.Count; i++) 
         {
-            if (triangles[i].TriContains(site))
+            if (triangles[i].TriContains(site)) //TriContains(site))
             {
                 tris.Add(triangles[i]);
             }
@@ -652,7 +684,6 @@ public class Voronoi : MonoBehaviour
     {
         Vector3 pt = Random.onUnitSphere;
 
-        /*
         for (int i = pts.Length - 1; i >= 0; i--)
         {
             if (Vector3.Distance(pts[i], pt) < cellRadius)
@@ -660,7 +691,6 @@ public class Voronoi : MonoBehaviour
                 return GetRandomPoint();
             }
         }
-        */
 
         return pt;
     }
@@ -747,8 +777,8 @@ public class Voronoi : MonoBehaviour
             //tempVerts = ClearDuplicateVerts(tempVerts);
             
             if (tempVerts.Count < 3) {
-                print("tempVerts Count: " + tempVerts.Count);
-                print("i: " + i);
+               //print("tempVerts Count: " + tempVerts.Count);
+               //print("i: " + i);
                 badSite.Add(tempVerts[0].cellVert);
                 for (int j = 0; j < tempVerts.Count; j++)
                 {
@@ -766,7 +796,7 @@ public class Voronoi : MonoBehaviour
     List<Vert> ClearDuplicateVerts(List<Vert> verts)
     {
 
-        print("verts in: " + verts.Count);
+       //print("verts in: " + verts.Count);
         //List<Vert> checkVerts = verts;
         List<Vert> nonDupeVerts = new List<Vert>();//verts;
         //int showMeTheDupes = 0;
@@ -809,7 +839,7 @@ public class Voronoi : MonoBehaviour
         */
 
         numVertList++;
-        print("verts out: " + nonDupeVerts.Count);
+       //print("verts out: " + nonDupeVerts.Count);
         return nonDupeVerts;
     }
 
@@ -847,7 +877,7 @@ public class Voronoi : MonoBehaviour
         }
         */
 
-        print("Total Verts:" + verts.Count + ", " + vertCount);
+       //print("Total Verts:" + verts.Count + ", " + vertCount);
         //print();
 
         return verts;
