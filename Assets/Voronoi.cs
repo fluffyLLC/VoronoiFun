@@ -309,7 +309,7 @@ public class Voronoi : MonoBehaviour
 
     struct MeshTri
     {
-        public Vert[] vertisies { get; }
+        public Vert[] vertisies { get; set;}
         public Vector3 center { get; }
         public Vector3 normal { get; }
         public Vector2[] UVs { get; }
@@ -331,8 +331,15 @@ public class Voronoi : MonoBehaviour
             Vector3 targetNormal = CalcTargetNormal();
             Vector3 currentNormal = CalcCurrentNormal();
 
+            if (Vector3.Dot(targetNormal, targetNormal) < 0) {
+                vertisies = new Vert[] {vertisies[2],vertisies[1],vertisies[0]};
+            }
             //TODO: take the dot product of target normal vs current normal, if negative reverse vertisy order
+            //TODO: store indexes of tris after the order is set
 
+            tri[0] = vertisies[0].index;
+            tri[1] = vertisies[1].index;
+            tri[2] = vertisies[2].index;
         }
 
         private Vector3 CalcCurrentNormal()
@@ -1028,7 +1035,7 @@ public class Voronoi : MonoBehaviour
 
     void GenerateMesh() {
 
-        //TODO: use the Triangles Built in Logic to set UVs  
+        //TODO: use the Triangles Built in Logic to set UVs
 
 
         Vector3[] finalVerts;
