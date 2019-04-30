@@ -1,7 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
+
+
+
+   [ExecuteInEditMode]
 public class Voronoi : MonoBehaviour {
     [Range(20, 100)] public int numberOfPoints = 40;
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
@@ -14,8 +19,8 @@ public class Voronoi : MonoBehaviour {
     Mesh voronoiMesh;
 
     //TODO: remove this after debug is complete
-    public int numVertList = 0;
-    public List<Vector3> badSite;
+    //public int numVertList = 0;
+    //public List<Vector3> badSite;
     //Vector3 center =  
 
 
@@ -37,18 +42,34 @@ public class Voronoi : MonoBehaviour {
     }
 
     void OnValidate() {
-        badSite = new List<Vector3>();
+        
+
+    }
+
+    public void SaveMesh() {
+        print("Mesh Saved");
+        AssetDatabase.CreateAsset(voronoiMesh,"Assets");
+        AssetDatabase.SaveAssets();
+
+    }
+
+    public void NewMesh() {
+        //badSite = new List<Vector3>();
         pts = new Vector3[numberOfPoints];
         cells = new List<Cell>();
         cornerTris = new List<MeshTri>();
         quads = new List<MeshQuad>();
 
         //loop set the location of a ll the points
-        for (int i = 0; i < pts.Length; i++) {
+        for (int i = 0; i < pts.Length; i++)
+        {
             //TODO:scale the mag of these unit vectors
-            if (useCellRadius) {
+            if (useCellRadius)
+            {
                 pts[i] = GetRandomPoint() + transform.position;
-            } else {
+            }
+            else
+            {
                 pts[i] = Random.onUnitSphere + transform.position;
             }
 
@@ -68,7 +89,8 @@ public class Voronoi : MonoBehaviour {
 
         //print("nonDTris 2: " + triangles.Count);
 
-        for (int i = pts.Length - 1; i >= 0; i--) {
+        for (int i = pts.Length - 1; i >= 0; i--)
+        {
 
             List<DelaunyTriangle> cellTris = FindTris(pts[i]);
             //print(cellTris.Count);
@@ -82,6 +104,7 @@ public class Voronoi : MonoBehaviour {
         GenerateQuads();
 
         GenerateMesh();
+
 
     }
 
@@ -196,10 +219,12 @@ public class Voronoi : MonoBehaviour {
         }
         */
 
+        /*
         Gizmos.color = new Color(0, 1, 1, 0.05f);
         for (int i = 0; i < badSite.Count; i++) {
             Gizmos.DrawSphere(badSite[i], 0.1f);
         }
+        */
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////Structs
@@ -742,7 +767,7 @@ public class Voronoi : MonoBehaviour {
             if (tempVerts.Count < 3) {
                 //print("tempVerts Count: " + tempVerts.Count);
                 //print("i: " + i);
-                badSite.Add(tempVerts[0].cellVert);
+                //badSite.Add(tempVerts[0].cellVert);
                 for (int j = 0; j < tempVerts.Count; j++) {
                     //tempVerts[j].PrintAll();
                 }
@@ -796,7 +821,7 @@ public class Voronoi : MonoBehaviour {
         }
         */
 
-        numVertList++;
+        //numVertList++;
         //print("verts out: " + nonDupeVerts.Count);
         return nonDupeVerts;
     }
@@ -1013,3 +1038,5 @@ public class Voronoi : MonoBehaviour {
 
 
 }
+
+
