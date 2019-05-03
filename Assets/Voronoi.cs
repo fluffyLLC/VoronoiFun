@@ -8,6 +8,8 @@ using UnityEditor;
 
    [ExecuteInEditMode]
 public class Voronoi : MonoBehaviour {
+    public string saveName = "Vmesh";
+    public string filePath = "Assets/SavedMeshes/";
     [Range(20, 100)] public int numberOfPoints = 40;
     List<DelaunyTriangle> triangles = new List<DelaunyTriangle>();
     List<Cell> cells;
@@ -28,6 +30,7 @@ public class Voronoi : MonoBehaviour {
     public bool useCellRadius = true;
     float cellRadius = .25f;
 
+    
     public bool drawDelauny = false;
     public bool drawCells = true;
     public bool drawCorners = true;
@@ -48,7 +51,7 @@ public class Voronoi : MonoBehaviour {
 
     public void SaveMesh() {
         print("Mesh Saved");
-        AssetDatabase.CreateAsset(voronoiMesh,"Assets");
+        AssetDatabase.CreateAsset(voronoiMesh, filePath + saveName + ".asset");
         AssetDatabase.SaveAssets();
 
     }
