@@ -54,11 +54,10 @@ public class Voronoi : MonoBehaviour {
 
     public Mesh GetVoronoiMesh(int points) {
         numberOfPoints = points;
-        NewMesh();
-        return voronoiMesh;
+        return NewMesh(); ;
     }
 
-    public void NewMesh() {
+    public Mesh NewMesh() {
         //badSite = new List<Vector3>();
         pts = new Vector3[numberOfPoints];
         cells = new List<Cell>();
@@ -108,7 +107,11 @@ public class Voronoi : MonoBehaviour {
 
         GenerateQuads();
 
-        GenerateMesh();
+        Mesh m = GenerateMesh();
+
+        GetComponent<MeshFilter>().mesh = m;
+
+        return m;
 
     }
 
@@ -954,10 +957,11 @@ public class Voronoi : MonoBehaviour {
         return false;
     }
 
-    void GenerateMesh() {
+    Mesh GenerateMesh() {
 
         //TODO: use the Triangles Built in Logic to set UVs
 
+        Mesh mesh = new Mesh();
 
         Vector3[] finalVerts;
 
@@ -1026,16 +1030,18 @@ public class Voronoi : MonoBehaviour {
         }
 
         finalTris = tempTriHolder.ToArray();
-       // UVs = tempUVHolder.ToArray();
+        // UVs = tempUVHolder.ToArray();
 
 
-        
 
-        voronoiMesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = voronoiMesh;
-        voronoiMesh.vertices = finalVerts;
-        voronoiMesh.triangles = finalTris;
-        voronoiMesh.uv = UVs;
+
+        mesh = new Mesh();
+        //GetComponent<MeshFilter>().mesh = mesh;
+        mesh.vertices = finalVerts;
+        mesh.triangles = finalTris;
+        mesh.uv = UVs;
+
+        return mesh;
 
     }
 

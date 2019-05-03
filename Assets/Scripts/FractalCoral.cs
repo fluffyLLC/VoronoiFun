@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
+//[RequireComponent(typeof(Voronoi))]
 public class FractalCoral : MonoBehaviour
 {
     public GameObject[] v100Prefabs;
@@ -9,7 +12,7 @@ public class FractalCoral : MonoBehaviour
     public GameObject[] v50Prefabs;
     public GameObject[] v20Prefabs;
 
-    Voronoi VoronoiMeshes = new Voronoi();
+    Voronoi VoronoiMeshes;// = new Voronoi();
 
     int numItterations = 0;
     public float scaleMod = 0.9f;
@@ -27,16 +30,24 @@ public class FractalCoral : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        
         //scale = startScale;
         //SpawnCoral(transform);
     }
 
     public void GenerateCoral()
     {
+        VoronoiMeshes = GetComponent<Voronoi>();
         scale = startScale;
         numItterations = 0;
         // print(scale);
-        SpawnCoral(transform);
+        List <CombineInstance> meshList = new List<CombineInstance>();
+        SpawnCoral(Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale), meshList, 3);
+        Mesh mesh = new Mesh();
+        mesh.CombineMeshes(meshList.ToArray());
+
+        MeshFilter meshFilter = GetComponent<MeshFilter>();
+        meshFilter.mesh = mesh;
     }
 
 
@@ -51,7 +62,7 @@ public class FractalCoral : MonoBehaviour
 
 
 
-    Mesh SpawnCoral(Transform spawnPoint)
+    void SpawnCoral(Matrix4x4 spawnPoint, List<CombineInstance> meshList, int stageItterations)
     {
         // print("spawning Coral");
 
@@ -59,28 +70,39 @@ public class FractalCoral : MonoBehaviour
         //GameObject g = Instantiate(PickCoral(), spawnPoint.position, spawnPoint.rotation, spawnPoint);
         //g.transform.localScale = new Vector3(scale, scale, scale);
 
-        Mesh m = PickCoral();
+        CombineInstance m = new CombineInstance();
+
+        m.mesh = PickCoral();
+        m.transform = spawnPoint;// Matrix4x4.TRS(spawnPoint.position, spawnPoint.rotation, spawnPoint.lossyScale);
 
 
         scale *= scaleMod;
         numItterations++;
 
+        Vector3 pos = m.transform.MultiplyPoint(new Vector3(0, 1, 0));
+        Quaternion rotation = spawnPoint.rotation * Quaternion.Euler(Random.Range(-30, 30), Random.Range(-30, 30), Random.Range(-30, 30));
+
+
+        scale *= scaleMod;
+
+        Matrix4x4 t = Matrix4x4.TRS(pos,rotation,spawnPoint.lossyScale*scale);
+
+
         float stageScale = scale;
-        int stageItterations = numItterations;
 
         if (scale > scaleMin)
         {
 
-            Transform[] snaps = GetSnaps(g);
+            //Transform[] snaps = GetSnaps(g);
 
-            for (int i = 0; i < snaps.Length; i++)
+            for (int i = 0; i < 1; i++)
             {
                 if (Random.value > .25f)
                 {
                     numItterations = stageItterations;
                     scale = stageScale;
                     // print(scale);
-                    SpawnCoral(snaps[i]);
+                    SpawnCoral(t,meshList,3);
                 }
             }
         }
