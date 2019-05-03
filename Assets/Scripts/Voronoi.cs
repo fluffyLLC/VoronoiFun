@@ -17,7 +17,6 @@ public class Voronoi : MonoBehaviour {
     List<MeshTri> cornerTris;
     List<MeshQuad> quads;
     Vector3[] pts;
-
     Mesh voronoiMesh;
 
     //TODO: remove this after debug is complete
@@ -25,16 +24,14 @@ public class Voronoi : MonoBehaviour {
     //public List<Vector3> badSite;
     //Vector3 center =  
 
-
     int radius = 10;
     public bool useCellRadius = true;
     float cellRadius = .25f;
 
-    
     public bool drawDelauny = false;
-    public bool drawCells = true;
-    public bool drawCorners = true;
-    public bool drawQuads = true;
+    public bool drawCells = false;
+    public bool drawCorners = false;
+    public bool drawQuads = false;
 
 
 
@@ -53,7 +50,12 @@ public class Voronoi : MonoBehaviour {
         print("Mesh Saved");
         AssetDatabase.CreateAsset(voronoiMesh, filePath + saveName + ".asset");
         AssetDatabase.SaveAssets();
+    }
 
+    public Mesh GetVoronoiMesh(int points) {
+        numberOfPoints = points;
+        NewMesh();
+        return voronoiMesh;
     }
 
     public void NewMesh() {
@@ -107,7 +109,6 @@ public class Voronoi : MonoBehaviour {
         GenerateQuads();
 
         GenerateMesh();
-
 
     }
 

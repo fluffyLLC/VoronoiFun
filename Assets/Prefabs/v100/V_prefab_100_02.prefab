@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1454380186870916138}
   m_LocalRotation: {x: 0.34138253, y: -0.024456315, z: -0.11552911, w: 0.9324768}
-  m_LocalPosition: {x: 0.272, y: 1.569, z: 0.68}
+  m_LocalPosition: {x: 0.23, y: 1.569, z: 0.543}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1454380188324167886}
@@ -70,13 +70,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1454380187086408584}
-  m_LocalRotation: {x: -0.67405987, y: -0.30846292, z: -0.19905862, w: 0.64099115}
-  m_LocalPosition: {x: 0.738, y: 1, z: -0.703}
+  m_LocalRotation: {x: -0.36556718, y: 0.29313034, z: 0.19603668, w: 0.8613971}
+  m_LocalPosition: {x: -0.466, y: 1.592, z: -0.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1454380188324167886}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: -80.729004, y: -127.921005, z: 85.715004}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: -48.136, y: -327.184, z: 370.657}
 --- !u!114 &1454380187086408590
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123,7 +123,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1454380188324167886}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1454380187805237078
 MeshFilter:
@@ -185,52 +185,6 @@ MonoBehaviour:
   radius: 0.05
   color: {r: 0, g: 0, b: 1, a: 0.25}
   target: {fileID: 0}
---- !u!1 &1454380187845732592
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1454380187845732593}
-  - component: {fileID: 1454380187845732598}
-  m_Layer: 0
-  m_Name: Snap2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1454380187845732593
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1454380187845732592}
-  m_LocalRotation: {x: -0.49722043, y: 0.25942567, z: 0.68604547, w: 0.4634779}
-  m_LocalPosition: {x: -0.844, y: 0.647, z: -0.24}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1454380188324167886}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: -54.771004, y: -49.980003, z: 139.065}
---- !u!114 &1454380187845732598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1454380187845732592}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5ec08a3e068442449155284dcb90507, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  radius: 0.05
-  color: {r: 0, g: 1, b: 0.08247161, a: 0.25}
-  target: {fileID: 0}
 --- !u!1 &1454380188324167880
 GameObject:
   m_ObjectHideFlags: 0
@@ -241,6 +195,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1454380188324167886}
   - component: {fileID: 1454380188324167881}
+  - component: {fileID: 1508359459050634290}
   m_Layer: 0
   m_Name: V_prefab_100_02
   m_TagString: Untagged
@@ -260,7 +215,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1454380186870916139}
-  - {fileID: 1454380187845732593}
   - {fileID: 1454380187086408585}
   - {fileID: 1454380187805237079}
   m_Father: {fileID: 0}
@@ -281,3 +235,20 @@ MonoBehaviour:
   radius: 0.05
   color: {r: 1, g: 0, b: 0, a: 0.25}
   target: {fileID: 0}
+--- !u!114 &1508359459050634290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1454380188324167880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b24c6e99276bdd448a3d0e5a8f8b5267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  snapPoints:
+  - {fileID: 1454380186870916139}
+  - {fileID: 1454380187086408585}
+  meshTransform: {fileID: 1454380187805237079}
+  baseTransform: {fileID: 0}

@@ -8,16 +8,21 @@ public class DrawTransformSphear : MonoBehaviour
     public float radius = 0.05f;
     public Color color = new Color(0,0,1,0.25f);
     public Transform target;
+    public static bool draw = true;
 
 
     void OnDrawGizmos() {
-        Gizmos.color = color;
-        if (target != null)
+        if (draw)
         {
-            Gizmos.DrawSphere(target.position, radius);
-        }
-        else {
-            Gizmos.DrawSphere(transform.position, radius);
+            Gizmos.color = color;
+            if (target != null)
+            {
+                Gizmos.DrawSphere(target.position, radius);
+            }
+            else
+            {
+                Gizmos.DrawSphere(transform.position, radius);
+            }
         }
     }
 

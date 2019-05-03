@@ -2,36 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteInEditMode]
-public class FractalGroundCover : MonoBehaviour
+public class FractalCoral : MonoBehaviour
 {
-
-    /*
-    struct PrefabContainer
-    {
-        public Transform[] snapPoints { get; }
-        public Transform meshPivot { get; }
-        public Transform prefabPivot { get; }
-
-        public PrefabContainer(Transform[] snapPoints, Transform meshPivot, Transform prefabPivot)
-        {
-            this.snapPoints = snapPoints;
-            this.meshPivot = meshPivot;
-            this.prefabPivot = prefabPivot;
-        }
-
-
-    }
-    */
-
     public GameObject[] v100Prefabs;
     public GameObject[] v75Prefabs;
     public GameObject[] v50Prefabs;
     public GameObject[] v20Prefabs;
 
+    Voronoi VoronoiMeshes = new Voronoi();
+
     int numItterations = 0;
     public float scaleMod = 0.9f;
-    public float startScale = 2;
+    public float startScale = 1;
     float scale;
     public float scaleMin = 0.25f;
 
@@ -49,10 +31,11 @@ public class FractalGroundCover : MonoBehaviour
         //SpawnCoral(transform);
     }
 
-    public void GenerateCoral() {
+    public void GenerateCoral()
+    {
         scale = startScale;
         numItterations = 0;
-       // print(scale);
+        // print(scale);
         SpawnCoral(transform);
     }
 
@@ -68,13 +51,16 @@ public class FractalGroundCover : MonoBehaviour
 
 
 
-    void SpawnCoral(Transform spawnPoint)
+    Mesh SpawnCoral(Transform spawnPoint)
     {
-       // print("spawning Coral");
+        // print("spawning Coral");
 
         //Quaternion newRot = Quaternion.Euler(spawnPoint.eulerAngles.x, Random.Range(0, 360), spawnPoint.eulerAngles.z);
-        GameObject g = Instantiate(PickCoral(), spawnPoint.position, spawnPoint.rotation, spawnPoint);
-        g.transform.localScale = new Vector3(scale,scale,scale);
+        //GameObject g = Instantiate(PickCoral(), spawnPoint.position, spawnPoint.rotation, spawnPoint);
+        //g.transform.localScale = new Vector3(scale, scale, scale);
+
+        Mesh m = PickCoral();
+
 
         scale *= scaleMod;
         numItterations++;
@@ -82,21 +68,23 @@ public class FractalGroundCover : MonoBehaviour
         float stageScale = scale;
         int stageItterations = numItterations;
 
-        if (scale > scaleMin) {
-           
+        if (scale > scaleMin)
+        {
+
             Transform[] snaps = GetSnaps(g);
 
-            for (int i = 0; i < snaps.Length; i++) {
+            for (int i = 0; i < snaps.Length; i++)
+            {
                 if (Random.value > .25f)
                 {
                     numItterations = stageItterations;
                     scale = stageScale;
-                   // print(scale);
+                    // print(scale);
                     SpawnCoral(snaps[i]);
                 }
             }
         }
-       
+
 
 
         //return g;
@@ -104,7 +92,7 @@ public class FractalGroundCover : MonoBehaviour
     }
 
 
-    GameObject PickCoral()
+    Mesh PickCoral()
     {
         //print("picking coral");
         float a = Random.value;
@@ -112,35 +100,37 @@ public class FractalGroundCover : MonoBehaviour
 
         if (numItterations == 0)
         {
-            return RandomFromArray(v100Prefabs);
+            return VoronoiMeshes.GetVoronoiMesh(100); //RandomFromArray(v100Prefabs);
         }
         else if (numItterations <= 2)
         {
-            if (a >= 0.75)
+            if (a >= 0.9)
             {
-                return RandomFromArray(v75Prefabs);
+                return VoronoiMeshes.GetVoronoiMesh(100); RandomFromArray(v75Prefabs);
 
             }
-            else {
-                return RandomFromArray(v100Prefabs);
+            else
+            {
+                return VoronoiMeshes.GetVoronoiMesh(75); RandomFromArray(v100Prefabs);
             }
         }
         else if (numItterations <= 4)
         {
 
-            if (a >= 0.75)
+            if (a >= 0.9)
             {
 
-                return RandomFromArray(v50Prefabs);
+                return VoronoiMeshes.GetVoronoiMesh(75);
             }
-            else {
-                return RandomFromArray(v75Prefabs);
+            else
+            {
+                return VoronoiMeshes.GetVoronoiMesh(50);
 
             }
         }
         else
         {
-            return RandomFromArray(v20Prefabs);
+            return VoronoiMeshes.GetVoronoiMesh(20);
 
         }
 
@@ -148,24 +138,15 @@ public class FractalGroundCover : MonoBehaviour
         //return coral;
     }
 
-    Transform[] GetSnaps(GameObject prefab) {
+    Transform[] GetSnaps(GameObject prefab)
+    {
         TransformRefrence tRef = prefab.GetComponent<TransformRefrence>();
         return tRef.snapPoints;
     }
 
 
-    GameObject RandomFromArray(GameObject[] array) {
-        return array[Mathf.RoundToInt(Random.Range(-0.4f,(array.Length-1)+0.4f))]; 
+    GameObject RandomFromArray(GameObject[] array)
+    {
+        return array[Mathf.RoundToInt(Random.Range(-0.4f, (array.Length - 1) + 0.4f))];
     }
-
-
-    /*
-    PrefabContainer[] SetPrefabContainer(GameObject[] prefabs) {
-        PrefabContainer[] transforms = new PrefabContainer[prefabs.Length];
-
-
-
-    }
-    */
-
 }

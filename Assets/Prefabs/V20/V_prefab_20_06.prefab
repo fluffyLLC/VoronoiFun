@@ -103,6 +103,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7684345412157776161}
   - component: {fileID: 8634695783731693971}
+  - component: {fileID: 9058695948230189652}
   m_Layer: 0
   m_Name: V_prefab_20_06
   m_TagString: Untagged
@@ -143,6 +144,23 @@ MonoBehaviour:
   radius: 0.05
   color: {r: 1, g: 0, b: 0, a: 0.25}
   target: {fileID: 0}
+--- !u!114 &9058695948230189652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379891231462944294}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b24c6e99276bdd448a3d0e5a8f8b5267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  snapPoints:
+  - {fileID: 6461098020941745245}
+  - {fileID: 5130661508241997923}
+  - {fileID: 7274547237397604873}
+  meshTransform: {fileID: 6966442958256901186}
 --- !u!1 &866110772443171091
 GameObject:
   m_ObjectHideFlags: 0

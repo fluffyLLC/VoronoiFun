@@ -7,7 +7,8 @@ public class TransformRefrence : MonoBehaviour
 
     public Transform[] snapPoints;
     public Transform meshTransform;
-    Transform baseTransform;
+    [HideInInspector]
+    public Transform baseTransform;
 
     // Start is called before the first frame update
     void Start()
